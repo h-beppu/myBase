@@ -1,0 +1,61 @@
+---
+- name: install remi-repo
+  yum: name=http://rpms.famillecollet.com/enterprise/remi-release-6.rpm
+
+- yum: name={{ item }} state=present
+  with_items:
+    - libselinux-python
+    - MySQL-python
+    - zsh
+    - screen
+    - nmap
+    - wget
+    - git
+    - nc
+    - tcpdump
+    - ngrep
+    - ntpdate
+    - logrotate
+    - vim
+    - sudo
+    - net-snmp
+
+- selinux: state=disabled
+- shell: setenforce 0
+  ignore_errors: yes
+
+- name: copy hosts.allow
+  template: src=hosts.allow dest=/etc/hosts.allow owner=root group=root mode=644
+
+- name: copy hosts.deny
+  template: src=hosts.deny dest=/etc/hosts.deny owner=root group=root mode=644
+
+- name: set snmpd.local.conf
+  template: src=snmpd.local.conf dest=/etc/snmp/snmpd.local.conf owner=root group=root mode=644
+
+- name: copy iptables
+  template: src=iptables dest=/etc/sysconfig/iptables owner=root group=root mode=644
+
+- name: increase sshd startup servers
+  lineinfile: dest=/etc/ssh/sshd_config line="MaxStartups 20"
+
+- name: set kernel panic time
+  lineinfile: dest=/etc/sysctl.conf line="kernel.panic = 30"
+
+- name: set name servers 202.53.16.66
+  action: lineinfile dest=/etc/resolv.conf line="nameserver 202.53.16.66"
+
+- name: set name servers 202.53.22.130
+  action: lineinfile dest=/etc/resolv.conf line="nameserver 202.53.22.130"
+
+- service: name=sshd state=restarted
+
+# python -c 'import crypt; print crypt.crypt("hogehoge", "$1$SomeSalt$")'
+- user: name=tyrell password="$1$XYpVVl8A$hqBnrPBNzvfsFkpeZqV8D/" shell=/bin/bash state=present append=yes
+
+- name: edit sudoler
+  lineinfile: dest=/etc/sudoers line="tyrell  ALL=(ALL)   NOPASSWD:ALL"
+
+- file: path=/etc/sudoers owner=root group=root mode=440
+
+- service: name=iptables state=restarted

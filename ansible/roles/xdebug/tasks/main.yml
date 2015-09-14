@@ -1,0 +1,11 @@
+---
+- name: install xdebug
+  yum: name={{ item }} state=present enablerepo=remi,remi-php56
+  with_items:
+    - php-pecl-xdebug
+    - php-phpunit-PHPUnit
+
+- template: src=xdebug.ini.j2 dest=/etc/php.d/xdebug.ini
+
+- name: apache再起動
+  service: name=httpd state=restarted

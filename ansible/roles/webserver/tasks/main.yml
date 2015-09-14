@@ -1,0 +1,46 @@
+---
+- yum: name={{ item }} state=present enablerepo=remi,remi-php56
+  with_items:
+    - httpd
+    - php
+    - mod_ssl
+    - php-mcrypt
+    - php-pecl-ncurses
+    - php-mysql
+    - php-mbstring
+    - php-cli
+    - php-pecl-memcache
+    - php-xml
+    - php-xmlrpc
+    - php-soap
+    - php-snmp
+    - php-pgsql
+    - php-gd
+
+- name: install composer
+  shell: curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/bin
+
+- name: move composer.phar to composer
+  command: mv /usr/bin/composer.phar /usr/bin/composer
+
+- name: make sure the directory exists
+  action: file path={{ webroot }} state=directory
+
+- name: copy php.ini
+  action: copy src=php.ini dest=/etc/php.ini
+
+- name: copy php.d
+  action: copy src=php.d/ dest=/etc/php.d/
+
+- name: setup httpd
+  action: template src=httpd/conf/httpd.conf                         dest=/etc/httpd/conf/httpd.conf
+
+- name: copy php.conf
+  action: template src=httpd/conf.d/php.conf                         dest=/etc/httpd/conf.d/php.conf
+
+- service: name=iptables state=stopped enabled=no
+
+- service: name=httpd  enabled=yes
+
+- name: apache再起動
+  service: name=httpd state=restarted

@@ -1,0 +1,5 @@
+[all]
+192.168.33.10
+
+[all:vars]
+webroot="/vagrant/webapp"
